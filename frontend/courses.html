@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>InnovaLearn — Courses</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+    <header class="site-header">
+        <div class="logo">✨ <span>InnovaLearn</span></div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a class="btn" href="login.html">Login</a>
+        </nav>
+    </header>
+
+    <main class="courses-page">
+        <h1>Courses</h1>
+        <p class="muted">Click a course to view details (bottom panel will slide up).</p>
+
+        <div class="course-search">
+            <input id="courseSearch" type="text" placeholder="Search a course..." />
+        </div>
+
+        <div class="courses-grid"></div>
+
+        <p id="noResults" class="muted" style="display:none;text-align:center;margin-top:14px;">
+            No course found
+        </p>
+    </main>
+
+    <!-- SLIDE PANEL -->
+    <div id="coursePanel" class="course-panel" aria-hidden="true">
+        <button id="closePanel" class="panel-close">✕</button>
+
+        <div class="panel-content">
+            <h2 id="panelTitle">Course Title</h2>
+            <p id="panelState" class="state-badge">STATE</p>
+            <p id="panelDesc">Description</p>
+
+            <div class="panel-actions">
+                <a id="enrollBtn" class="btn primary" href="C:\Users\chukk\Downloads\jk\jk\ok.html">Go to Course</a>
+                <span id="notifyBtn" class="btn muted">Notify me</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

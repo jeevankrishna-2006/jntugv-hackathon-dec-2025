@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>InnovaLearn — Home</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="logo">✨ <span>InnovaLearn</span></div>
+        <nav>
+            <a href="courses.html" id="coursesLink">Courses</a>
+            <a href="innovation.html">Innovation Lab</a>
+            <a class="btn" href="login.html">Login</a>
+        </nav>
+    </header>
+
+    <main class="hero">
+        <section class="hero-left">
+            <h1>Learn Concepts.<br />Create Innovations.</h1>
+            <p class="lead">Your AI Professor that turns understanding into invention.</p>
+
+            <div class="search search-with-suggestions">
+                <input id="searchInput" placeholder="Enter any concept to learn" autocomplete="off" />
+                <button id="searchBtn">Search</button>
+
+                <!-- suggestion dropdown -->
+                <div id="suggestions" class="suggestions" aria-hidden="true"></div>
+            </div>
+        </section>
+
+        <section class="hero-right">
+            <div class="brain-wrap">
+                <img src="brain.jpg" alt="brain" class="brain" />
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <small>© InnovaLearn</small>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

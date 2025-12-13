@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Sign in — InnovaLearn</title>
+
+    <!-- Self-contained styles for the attractive login page -->
+    <style>
+        :root {
+            --bg-1: #eef6ff;
+            --bg-2: #f7fbff;
+            --card: #ffffff;
+            --accent: #2b6cb0;
+            --accent-2: #3b82f6;
+            --muted: #6b7280;
+            --glass: rgba(255, 255, 255, 0.7);
+            --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            --glass-2: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.5));
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background: radial-gradient(600px 400px at 10% 10%, rgba(59, 130, 246, 0.06), transparent 10%),
+                radial-gradient(500px 300px at 90% 90%, rgba(43, 108, 176, 0.04), transparent 10%),
+                linear-gradient(180deg, var(--bg-1), var(--bg-2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            color: #0f1720;
+        }
+
+        .login-wrap {
+            width: 100%;
+            max-width: 980px;
+            display: grid;
+            grid-template-columns: 1fr 460px;
+            gap: 28px;
+            align-items: center;
+        }
+
+        /* left panel (promo/visual) */
+        .promo {
+            padding: 30px;
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(250, 250, 255, 0.55));
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(6px) saturate(110%);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .promo-badge {
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            color: white;
+            padding: 8px 12px;
+            border-radius: 999px;
+            width: fit-content;
+            font-weight: 700;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.14);
+        }
+
+        .promo h2 {
+            margin: 0;
+            font-size: 26px;
+            line-height: 1.05
+        }
+
+        .promo p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 15px
+        }
+
+        .promo-art {
+            margin-top: 12px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .promo-art img {
+            max-width: 320px;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(43, 108, 176, 0.08);
+            transform: translateY(0);
+            transition: transform .6s cubic-bezier(.2, .9, .25, 1);
+        }
+
+        .promo:hover .promo-art img {
+            transform: translateY(-8px) rotate(-1deg);
+        }
+
+        /* right panel (form) */
+        .card {
+            padding: 26px;
+            border-radius: 18px;
+            background: var(--card);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(15, 23, 42, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card h1 {
+            margin: 0 0 8px;
+            font-size: 22px
+        }
+
+        .card p.lead {
+            margin: 0 0 18px;
+            color: var(--muted)
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px
+        }
+
+        .field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--glass-2);
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(14, 20, 30, 0.04);
+        }
+
+        .field input {
+            border: 0;
+            outline: 0;
+            background: transparent;
+            width: 100%;
+            font-size: 15px;
+            padding: 6px 4px;
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+            opacity: 0.72;
+            flex: 0 0 18px;
+            display: inline-block;
+        }
+
+        .row-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .remember {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .btn {
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            color: white;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 0;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.12);
+        }
+
+        .btn.ghost {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid rgba(43, 108, 176, 0.12);
+            box-shadow: none
+        }
+
+        .small {
+            font-size: 13px;
+            color: var(--muted)
+        }
+
+        .socials {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #eef6ff;
+            background: #fff;
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--muted)
+        }
+
+        .social-btn svg {
+            width: 18px;
+            height: 18px;
+            opacity: 0.9
+        }
+
+        .footer-note {
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center
+        }
+
+        /* eye toggle */
+        .eye {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            opacity: 0.72;
+        }
+
+        /* subtle floating shapes (decor) */
+        .decor {
+            position: absolute;
+            right: -60px;
+            top: -40px;
+            width: 220px;
+            height: 220px;
+            border-radius: 34%;
+            background: linear-gradient(135deg, rgba(43, 108, 176, 0.06), rgba(59, 130, 246, 0.04));
+            transform: rotate(20deg);
+            pointer-events: none;
+        }
+
+        @media (max-width:980px) {
+            .login-wrap {
+                grid-template-columns: 1fr;
+                padding: 0 8px
+            }
+
+            .promo-art img {
+                max-width: 260px
+            }
+        }
+
+        @media (max-width:520px) {
+            .promo {
+                display: none
+            }
+
+            .card {
+                padding: 18px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-wrap">
+
+        <!-- Left promo / visual -->
+        <div class="promo" aria-hidden="true">
+            <div class="promo-badge">New • 2025</div>
+            <h2>Welcome back to InnovaLearn</h2>
+            <p>Sign in to access courses, projects and practice labs. Learn at your pace — join peers and build real
+                things.</p>
+
+            <div class="promo-art">
+                <!-- using the brain.jpg — keep this file in project root -->
+                <img src="brain.jpg" alt="brain visual" />
+            </div>
+
+            <div class="footer-note">Need an account? <a href="#" onclick="alert('Sign-up coming soon (demo).')">Create
+                    one</a></div>
+        </div>
+
+        <!-- Right form card -->
+        <div class="card" role="main" aria-labelledby="signin-title">
+            <div class="decor" aria-hidden="true"></div>
+
+            <h1 id="signin-title">Sign in to your account</h1>
+            <p class="lead">Enter your details to continue to InnovaLearn</p>
+
+            <form id="loginForm" autocomplete="on" novalidate>
+                <!-- email -->
+                <div class="form-row" style="margin-top:6px">
+                    <label class="field" style="flex:1">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 7.5l9 6 9-6" stroke="#0f1720" stroke-opacity="0.6" stroke-width="1.2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <input id="email" name="email" type="email" placeholder="you@example.com" required />
+                    </label>
+                </div>
+
+                <!-- password -->
+                <div class="form-row">
+                    <label class="field" style="flex:1;position:relative">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M17 11V9a5 5 0 10-10 0v2" stroke="#0f1720" stroke-opacity="0.6" stroke-width="1.2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <rect x="3" y="11" width="18" height="10" rx="2" stroke="#0f1720" stroke-opacity="0.06" />
+                        </svg>
+                        <input id="pw" name="pw" type="password" placeholder="Password" required />
+                        <span id="toggleEye" class="eye" title="Show / hide password"
+                            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);">
+                            <!-- simple eye icon -->
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="#0f1720"
+                                    stroke-opacity="0.6" stroke-width="1.1" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <circle cx="12" cy="12" r="2.2" stroke="#0f1720" stroke-opacity="0.6"
+                                    stroke-width="1.1" />
+                            </svg>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="row-actions">
+                    <label class="remember">
+                        <input id="remember" type="checkbox" style="width:16px;height:16px" />
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="small"
+                        onclick="alert('Password reset demo — use actual flow in production')">Forgot?</a>
+                </div>
+
+                <div style="margin-top:14px;display:flex;gap:10px">
+                    <button class="btn" type="submit">Sign in</button>
+                    <button type="button" class="btn ghost" onclick="location.href='index.html'">Back</button>
+                </div>
+
+                <div class="socials" aria-hidden="true">
+                    <div class="social-btn" onclick="alert('Google sign-in demo')">
+                        <!-- Google glyph -->
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M21.35 11.1h-9.2v2.9h5.35c-.23 1.33-1.04 2.46-2.2 3.14v2.6h3.55c2.07-1.9 3.27-4.7 3.27-7.84 0-.55-.05-1.08-.17-1.59z"
+                                fill="#4285F4" />
+                            <path
+                                d="M12.15 22c2.97 0 5.47-1.02 7.29-2.78l-3.55-2.6c-1.01.69-2.3 1.09-3.74 1.09-2.86 0-5.28-1.93-6.15-4.52H2.15v2.84C3.98 19.98 7.8 22 12.15 22z"
+                                fill="#34A853" />
+                            <path
+                                d="M6 13.19a6.84 6.84 0 01-.35-2.19c0-.76.14-1.49.35-2.19V6.0H2.15A10.017 10.017 0 002.15 12c0 1.62.37 3.16 1.05 4.54L6 13.19z"
+                                fill="#FBBC05" />
+                            <path
+                                d="M12.15 6.4c1.6 0 3.04.55 4.17 1.63l3.12-3.12C17.6 2.9 15.1 2 12.15 2 7.8 2 3.98 4.02 2.15 6.99L6 9.81c.87-2.59 3.29-4.52 6.15-4.52z"
+                                fill="#EA4335" />
+                        </svg>
+                        <span>Google</span>
+                    </div>
+                    <div class="social-btn" onclick="alert('GitHub sign-in demo')">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12a10 10 0 006.84 9.5c.5.09.66-.22.66-.48 0-.24-.01-.87-.01-1.7-2.78.61-3.37-1.2-3.37-1.2-.45-1.15-1.1-1.46-1.1-1.46-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.9.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.93 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.6 9.6 0 0112 6.8c.85.004 1.7.11 2.5.32 1.92-1.3 2.76-1.02 2.76-1.02.55 1.37.21 2.39.1 2.64.64.7 1.03 1.6 1.03 2.68 0 3.83-2.34 4.68-4.58 4.92.36.31.68.92.68 1.85 0 1.33-.01 2.4-.01 2.73 0 .26.16.58.67.48A10 10 0 0022 12c0-5.52-4.48-10-10-10z" />
+                        </svg>
+                        <span>GitHub</span>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Inline JS: toggles, demo submit -->
+    <script>
+        (function () {
+            const pw = document.getElementById('pw');
+            const toggle = document.getElementById('toggleEye');
+            const form = document.getElementById('loginForm');
+
+            /* -------------------------
+               PASSWORD TOGGLE
+            -------------------------- */
+            if (toggle && pw) {
+                toggle.addEventListener('click', () => {
+                    pw.type = pw.type === 'password' ? 'text' : 'password';
+                    toggle.style.opacity = pw.type === 'text' ? '1' : '0.72';
+                });
+            }
+
+            /* -------------------------
+               LOGIN SUBMIT (MOCK)
+            -------------------------- */
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const email = document.getElementById('email').value.trim();
+                const pass = pw.value.trim();
+
+                if (!email || !pass) {
+                    alert('Please enter email and password.');
+                    return;
+                }
+
+                // 🔐 STORE LOGIN STATE
+                localStorage.setItem('isLoggedIn', 'true');
+
+                // 🔁 REDIRECT BACK AFTER LOGIN
+                const redirectPage =
+                    localStorage.getItem('redirectAfterLogin') || 'courses.html';
+
+                localStorage.removeItem('redirectAfterLogin');
+
+                const btn = form.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.textContent = 'Signing in...';
+
+                setTimeout(() => {
+                    window.location.href = redirectPage;
+                }, 700);
+            });
+        })();
+    </script>
+
+</body>
+
+</html>

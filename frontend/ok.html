@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>InventaLab – Web Development</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Inter, Arial, sans-serif;
+            background: #f6f7fb;
+            color: #111
+        }
+
+        header {
+            background: #fff;
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .06)
+        }
+
+        header h2 {
+            margin: 0;
+            color: #6a5cff
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 20px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 40px
+        }
+
+        .course-title {
+            font-size: 40px;
+            font-weight: 800
+        }
+
+        .course-tagline {
+            color: #555;
+            margin: 20px 0
+        }
+
+        .right-card {
+            background: #f7f8ff;
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between
+        }
+
+        .enroll-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 700;
+            background: #6a5cff;
+            color: #fff;
+            cursor: pointer
+        }
+
+        /* popup */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            display: none;
+            align-items: center;
+            justify-content: center
+        }
+
+        .popup {
+            background: #fff;
+            width: 400px;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center
+        }
+
+        .popup input,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border: 1px solid #ccc
+        }
+
+        .popup button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: #6a5cff;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h2>InventaLab</h2>
+        <div>Web Development Course</div>
+    </header>
+
+    <div class="container">
+
+        <div>
+            <div class="course-title">Web Development Mastery</div>
+            <div class="course-tagline">
+                Build modern, responsive websites from scratch.
+            </div>
+        </div>
+
+        <div class="right-card">
+            <button id="mainBtn" class="enroll-btn"></button>
+        </div>
+
+    </div>
+
+    <!-- ENROLL POPUP -->
+    <div class="overlay" id="enrollBox">
+        <div class="popup" id="popupContent">
+            <h3>Enroll in Course</h3>
+            <input placeholder="Your Name">
+            <input placeholder="Email">
+            <textarea placeholder="Why do you want to learn Web Development?"></textarea>
+            <button onclick="confirmEnroll()">Confirm Enrollment</button>
+        </div>
+    </div>
+
+    <script>
+        const mainBtn = document.getElementById("mainBtn");
+        const enrollBox = document.getElementById("enrollBox");
+
+        function refreshButton() {
+            const enrolled = localStorage.getItem("enrolled_web") === "true";
+
+            if (enrolled) {
+                mainBtn.textContent = "Start Course";
+                mainBtn.onclick = () => {
+                    alert("Course Started 🚀 (connect API here)");
+                };
+            } else {
+                mainBtn.textContent = "Enroll • Free";
+                mainBtn.onclick = handleEnroll;
+            }
+        }
+
+        function handleEnroll() {
+            const logged = localStorage.getItem("isLoggedIn") === "true";
+
+            if (!logged) {
+                localStorage.setItem("afterLogin", "ok.html");
+                window.location.href = "login.html";
+            } else {
+                enrollBox.style.display = "flex";
+            }
+        }
+
+        function confirmEnroll() {
+            localStorage.setItem("enrolled_web", "true");
+
+            document.getElementById("popupContent").innerHTML = `
+    <h3>Enrollment Successful 🎉</h3>
+    <p>You are now enrolled.</p>
+    <button onclick="closeEnroll()">Start Course</button>
+  `;
+        }
+
+        function closeEnroll() {
+            enrollBox.style.display = "none";
+            refreshButton();
+        }
+
+        refreshButton();
+    </script>
+
+</body>
+
+</html>
