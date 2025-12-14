@@ -1,214 +1,190 @@
 import express from "express";
 import cors from "cors";
-import fetch from "node-fetch";
 import dotenv from "dotenv";
+import fetch from "node-fetch";
 
 dotenv.config();
 
 const app = express();
 const PORT = 3001;
 
-/* --------------------------------------------------
+/* ----------------------------------------
    MIDDLEWARE
--------------------------------------------------- */
+---------------------------------------- */
 app.use(cors());
 app.use(express.json());
 
+/* ----------------------------------------
+   SYSTEM PROMPT
+---------------------------------------- */
+const SYSTEM_PROMPT = `
+You are InventaLab’s AI Research Professor.
+You do NOT behave like a normal chatbot.
+
+Your mission:
+- Transform the learner’s thinking
+- Create productive doubt
+- Ask micro-questions
+- Guide invention-driven exploration
+
+Rules:
+- NEVER give direct answers
+- ALWAYS ask a micro-question first
+- Think in systems, not tutorials
+- Be precise, calm, and probing
+`.trim();
+
 /* --------------------------------------------------
-   HEALTH CHECK
+   SESSION STORE (IN-MEMORY)
 -------------------------------------------------- */
+const sessions = {};
+
+/* ----------------------------------------
+   HEALTH CHECK
+---------------------------------------- */
 app.get("/", (req, res) => {
-  res.send("🚀 InventaLab AI Research Professor Server is running");
+    res.send("✅ InventaLab Backend Running (Groq LLaMA)");
 });
 
 /* --------------------------------------------------
-   SYSTEM PROMPT (CORE INTELLECTUAL IP)
+   START SESSION
 -------------------------------------------------- */
-const SYSTEM_PROMPT = `
-You are InventaLab’s AI Research Professor, an advanced cognitive-engineering tutor designed to create innovators, not students.
-You do NOT behave like a normal chatbot or a school-style teacher.
-Your mission is to transform the learner’s thinking through doubt creation, micro-questions, diagrammatic reasoning, and invention-driven exploration.
+app.post("/session/start", (req, res) => {
+    const sessionId = "sess_" + Date.now();
 
-===============================
-CORE PHILOSOPHY
-===============================
-Your ultimate goal is to make the learner THINK deeply, DISCOVER ideas, activate a research mindset, and INVENT something original.
-You use confusion productively to ignite curiosity.
-
-===============================
-TEACHING STYLE
-===============================
-- NEVER give answers directly at the start.
-- ALWAYS begin with micro-questions.
-- BREAK assumptions gently.
-- BUILD understanding layer by layer.
-- Ask small questions first. Never overwhelm.
-
-===============================
-DOUBT ENGINE
-===============================
-Induce curiosity using questions like:
-- Is this always true?
-- What breaks if we change one variable?
-- What assumption is hidden here?
-
-===============================
-MICRO-QUESTION STRATEGY
-===============================
-Ask one small question at a time.
-Wait. Then deepen.
-
-===============================
-VISUALIZATION
-===============================
-Use mind maps, component trees, relationships.
-Prefer structure over text.
-
-===============================
-REAL-WORLD MAPPING
-===============================
-Always map concepts to real systems, failures, and tradeoffs.
-
-===============================
-INNOVATION REQUIREMENT
-===============================
-Every topic MUST end with an invention.
-No invention = no mastery.
-
-===============================
-BEHAVIOR RULES
-===============================
-- Do not lecture.
-- Do not dump explanations.
-- Do not test with exams.
-- Always push toward invention.
-
-===============================
-RESPONSE FORMAT
-===============================
-1. Micro-Question
-2. Doubt Creation
-3. Micro Follow-up
-4. Mind Map (textual)
-5. Research / Invention Challenge
-`;
-
-/* --------------------------------------------------
-   RAG SEARCH — LIVE INTERNET RETRIEVAL (TAVILY)
--------------------------------------------------- */
-app.post("/rag/search", async (req, res) => {
-  try {
-    const { query } = req.body;
-
-    if (!query) {
-      return res.status(400).json({ error: "Query is required" });
-    }
-
-    const response = await fetch("https://api.tavily.com/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        api_key: process.env.TAVILY_API_KEY,
-        query,
-        search_depth: "basic",
-        max_results: 4
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error("Tavily retrieval failed");
-    }
-
-    const data = await response.json();
-
-    const cleanedResults = (data.results || []).map(r => ({
-      title: r.title,
-      content: r.content,
-      url: r.url
-    }));
+    sessions[sessionId] = {
+        step: 0,
+        course: "web-development",
+        agenda: [
+            "What is the Web?",
+            "Client–Server Communication",
+            "HTML, CSS, JavaScript Mental Models",
+            "Invention Phase"
+        ]
+    };
 
     res.json({
-      source: "Live Internet (Tavily)",
-      retrieved_at: new Date().toISOString(),
-      results: cleanedResults
+        sessionId,
+        text: "Welcome. Before tools, let’s research the idea itself. What do you think the web actually is?",
+        microQuestions: [
+            "Is the web the same as the internet?",
+            "What must exist before a website can exist?"
+        ]
     });
-
-  } catch (error) {
-    console.error("❌ RAG Search Error:", error.message);
-    res.status(500).json({ error: "RAG search failed" });
-  }
 });
 
 /* --------------------------------------------------
-   AI RESEARCH PROFESSOR — THINKING ENGINE
+   TEACH ROUTE (GROQ VERSION)
 -------------------------------------------------- */
 app.post("/rag/teach", async (req, res) => {
-  try {
-    const { topic, retrieved } = req.body;
+    try {
+        const { sessionId, message } = req.body;
 
-    if (!topic || !retrieved || !Array.isArray(retrieved)) {
-      return res.status(400).json({
-        error: "Topic and retrieved knowledge are required"
-      });
-    }
+        if (!sessionId || !sessions[sessionId]) {
+            return res.status(400).json({ error: "Invalid session" });
+        }
 
-    const ragContext = retrieved
-      .map((r, i) => `Source ${i + 1}: ${r.content}`)
-      .join("\n\n");
+        const session = sessions[sessionId];
+        const currentTopic =
+            session.agenda[Math.min(session.step, session.agenda.length - 1)];
 
-    const finalPrompt = `
-SYSTEM PROMPT:
-${SYSTEM_PROMPT}
+        /* -------------------------
+           OPTIONAL RAG (TAVILY)
+        -------------------------- */
+        let ragContext = "";
+        if (process.env.TAVILY_API_KEY) {
+            try {
+                const tRes = await fetch("https://api.tavily.com/search", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        api_key: process.env.TAVILY_API_KEY,
+                        query: currentTopic,
+                        max_results: 2
+                    })
+                });
 
-LIVE INTERNET CONTEXT:
-${ragContext}
-
-CURRENT RESEARCH TOPIC:
-${topic}
-
-CURRENT STAGE:
-Early exploration — start with micro-questions.
-
-BEGIN INTERACTION:
-`;
-
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: finalPrompt }]
+                const tData = await tRes.json();
+                if (tData.results) {
+                    ragContext = tData.results.map(r => r.content).join("\n");
+                }
+            } catch {
+                console.log("⚠️ RAG skipped");
             }
-          ]
-        })
-      }
-    );
+        }
 
-    if (!geminiResponse.ok) {
-      throw new Error("Gemini API failed");
+        /* -------------------------
+           FINAL PROMPT
+        -------------------------- */
+        const messages = [
+            { role: "system", content: SYSTEM_PROMPT },
+            {
+                role: "system",
+                content: `CURRENT RESEARCH TOPIC: ${currentTopic}`
+            },
+            {
+                role: "system",
+                content: ragContext
+                    ? `REFERENCE CONTEXT (optional):\n${ragContext}`
+                    : ""
+            },
+            {
+                role: "user",
+                content: message
+            }
+        ];
+
+        /* -------------------------
+           GROQ API CALL
+        -------------------------- */
+        const groqResponse = await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${process.env.GROQ_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",  // ✅ current
+                    messages,
+                    temperature: 0.7,
+                    max_tokens: 600
+                })
+            }
+        );
+
+
+        if (!groqResponse.ok) {
+            const errText = await groqResponse.text();
+            console.error("❌ Groq API Error:", errText);
+            return res.status(500).json({
+                error: "Groq API Error",
+                details: errText
+            });
+        }
+
+        const data = await groqResponse.json();
+
+        const output =
+            data.choices?.[0]?.message?.content ||
+            "Let’s pause. What assumption are you making right now?";
+
+        res.json({
+            role: "InventaLab Professor",
+            agendaStep: currentTopic,
+            output
+        });
+
+    } catch (err) {
+        console.error("❌ Server Error:", err.message);
+        res.status(500).json({ error: "Internal Server Error" });
     }
-
-    const data = await geminiResponse.json();
-    const output =
-      data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-    res.json({
-      role: "InventaLab AI Research Professor",
-      output
-    });
-
-  } catch (error) {
-    console.error("❌ Teach Error:", error.message);
-    res.status(500).json({ error: "Teaching failed" });
-  }
 });
 
 /* --------------------------------------------------
    START SERVER
 -------------------------------------------------- */
 app.listen(PORT, () => {
-  console.log(`✅ InventaLab server running at http://localhost:${PORT}`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

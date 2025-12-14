@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>InventaLab — AI Research Session</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .bubble-user {
+            background: #eef0ff;
+        }
+
+        .bubble-ai {
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-b from-white to-[#fbfbff] text-[#0b1220]">
+
+    <main class="max-w-xl mx-auto px-4 pb-32">
+
+        <!-- Header -->
+        <header class="py-4 flex items-center justify-between">
+            <h1 class="text-lg font-bold">InventaLab</h1>
+            <div id="agendaBadge" class="text-xs px-3 py-1 rounded-full bg-[#eef0ff]">
+                Research Session
+            </div>
+        </header>
+
+        <!-- Messages -->
+        <div id="messages" class="space-y-3"></div>
+
+    </main>
+
+    <!-- Input -->
+    <form id="chatForm" class="fixed bottom-0 left-0 right-0 bg-white border-t p-4">
+        <div class="max-w-xl mx-auto flex gap-2">
+            <input id="userInput" class="flex-1 border rounded-full px-4 py-3" placeholder="Type your thought..." />
+            <button class="px-5 py-3 rounded-full bg-indigo-600 text-white font-semibold">
+                Send
+            </button>
+        </div>
+    </form>
+
+    <script>
+        /* =========================================
+           CONFIG
+        ========================================= */
+        const API_BASE = "http://localhost:3001";
+        let SESSION_ID = null;
+
+        /* =========================================
+           DOM
+        ========================================= */
+        const messagesEl = document.getElementById("messages");
+        const form = document.getElementById("chatForm");
+        const input = document.getElementById("userInput");
+        const agendaBadge = document.getElementById("agendaBadge");
+
+        /* =========================================
+           AUTO START SESSION
+        ========================================= */
+        document.addEventListener("DOMContentLoaded", startSession);
+
+        async function startSession() {
+            try {
+                const res = await fetch(`${API_BASE}/session/start`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" }
+                });
+
+                const data = await res.json();
+
+                SESSION_ID = data.sessionId;
+                agendaBadge.innerText = data.agendaTitle;
+
+                renderAI(data.text);
+
+            } catch (err) {
+                renderAI("⚠️ Failed to connect to backend.");
+                console.error(err);
+            }
+        }
+
+        /* =========================================
+           FORM SUBMIT
+        ========================================= */
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const text = input.value.trim();
+            if (!text || !SESSION_ID) return;
+
+            renderUser(text);
+            input.value = "";
+
+            await sendToAI(text);
+        });
+
+        /* =========================================
+           SEND MESSAGE
+        ========================================= */
+        async function sendToAI(message) {
+            try {
+                const res = await fetch(`${API_BASE}/rag/teach`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        sessionId: SESSION_ID,
+                        message
+                    })
+                });
+
+                const data = await res.json();
+
+                agendaBadge.innerText = data.agendaTitle;
+                renderAI(data.output);
+
+            } catch (err) {
+                renderAI("⚠️ Error talking to AI professor.");
+                console.error(err);
+            }
+        }
+
+        /* =========================================
+           RENDER HELPERS
+        ========================================= */
+        function renderUser(text) {
+            const div = document.createElement("div");
+            div.className = "flex justify-end";
+            div.innerHTML = `
+    <div class="bubble-user px-4 py-3 rounded-2xl text-sm max-w-[80%]">
+      ${escapeHtml(text)}
+    </div>
+  `;
+            messagesEl.appendChild(div);
+            scrollBottom();
+        }
+
+        function renderAI(text) {
+            const div = document.createElement("div");
+            div.className = "flex justify-start";
+            div.innerHTML = `
+    <div class="bubble-ai px-4 py-3 rounded-2xl shadow-sm text-sm max-w-[85%]">
+      ${escapeHtml(text)}
+    </div>
+  `;
+            messagesEl.appendChild(div);
+            scrollBottom();
+        }
+
+        function scrollBottom() {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;");
+        }
+    </script>
+
+</body>
+
+</html>
