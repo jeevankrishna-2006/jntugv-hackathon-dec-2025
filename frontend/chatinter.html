@@ -34,7 +34,10 @@
 
   <!-- Mermaid for mind-map rendering -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-  <script>mermaid.initialize({ startOnLoad: false })</script>
+  <script>mermaid.initialize({ startOnLoad: false, theme: 'default' })</script>
+
+  <!-- Marked.js for markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
     body { -webkit-font-smoothing:antialiased; }
@@ -43,6 +46,17 @@
     .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
     .bubble-user { background: linear-gradient(180deg,#eef0ff,#f6f5ff); }
     .bubble-assistant { background: #fff; }
+    
+    /* Markdown styling */
+    .prose h1 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0 0.5rem 0; }
+    .prose h2 { font-size: 1.25rem; font-weight: 600; margin: 1rem 0 0.5rem 0; }
+    .prose h3 { font-size: 1.1rem; font-weight: 600; margin: 0.75rem 0 0.5rem 0; }
+    .prose p { margin: 0.5rem 0; line-height: 1.6; }
+    .prose ul, .prose ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+    .prose li { margin: 0.25rem 0; }
+    .prose code { background: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-size: 0.875rem; }
+    .prose strong { font-weight: 600; }
+    .prose em { font-style: italic; }
   </style>
 </head>
 <body class="bg-gradient-to-b from-white to-[#fbfbff] text-[#0b1220] antialiased">
@@ -91,24 +105,41 @@
       <div id="microQ" class="flex gap-2 flex-wrap"></div>
 
       <!-- Mermaid mindmap panel -->
-      <div id="mermaidPanel" class="bg-white rounded-lg-2 p-3 shadow-soft-lg hidden">
-        <div class="flex items-center justify-between">
-          <div class="text-sm font-semibold">Mind-Map</div>
-          <button id="closeMermaid" class="text-xs text-muted">Close</button>
+      <div id="mermaidPanel" class="bg-white rounded-lg-2 p-4 shadow-soft-lg hidden">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-sm font-semibold flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6m-9-9h6m6 0h6"/>
+            </svg>
+            Mind Map
+          </div>
+          <button id="closeMermaid" class="text-xs text-muted hover:text-gray-900">✕ Close</button>
         </div>
-        <div id="mermaidContainer" class="mt-3">
-          <div class="mermaid" id="mermaidCode">graph TD; A-->B;</div>
+        <div id="mermaidContainer" class="overflow-x-auto">
+          <div class="mermaid" id="mermaidCode"></div>
         </div>
+      </div>
+
+      <!-- Sources panel -->
+      <div id="sourcesPanel" class="bg-white rounded-lg-2 p-4 shadow-soft-lg hidden">
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          </svg>
+          <div class="text-sm font-semibold">Sources</div>
+        </div>
+        <div id="sourcesList" class="space-y-2 text-sm"></div>
       </div>
 
       <!-- Invention preview -->
       <div id="inventionPreview" class="bg-white rounded-lg-2 p-4 shadow-soft-lg hidden">
         <div class="flex items-start justify-between">
-          <div>
-            <h3 class="font-semibold">Invention Prompt</h3>
+          <div class="flex-1">
+            <h3 class="font-semibold">🎯 Invention Challenge</h3>
             <p class="text-sm text-muted mt-1" id="inventionPromptText"></p>
           </div>
-          <button id="startInvention" class="px-3 py-2 bg-[#eef0ff] rounded-lg text-sm font-semibold">Start</button>
+          <button id="startInvention" class="px-3 py-2 bg-brand-100 hover:bg-brand-200 rounded-lg text-sm font-semibold transition-colors">Start</button>
         </div>
       </div>
 
@@ -119,8 +150,8 @@
   <!-- Sticky input area -->
   <form id="chatForm" class="fixed left-0 right-0 bottom-0 p-4 bg-white/90 backdrop-blur-md border-t border-t-[#f1eefb]">
     <div class="max-w-xl mx-auto flex gap-2 items-center">
-      <input id="userInput" class="flex-1 px-4 py-3 rounded-full border border-[#f1eefb]" placeholder="Type your thought or answer a micro-question..." />
-      <button id="sendBtn" type="submit" class="px-4 py-3 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white font-semibold">Send</button>
+      <input id="userInput" class="flex-1 px-4 py-3 rounded-full border border-[#f1eefb] focus:outline-none focus:border-brand-300" placeholder="Type your thought or answer a micro-question..." />
+      <button id="sendBtn" type="submit" class="px-4 py-3 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white font-semibold hover:from-brand-600 hover:to-brand-700 transition-all">Send</button>
     </div>
   </form>
 
@@ -130,21 +161,21 @@
     <div class="relative w-full md:w-3/4 bg-white rounded-t-2xl md:rounded-2xl p-4 max-h-[80vh] overflow-auto">
       <div class="flex items-center justify-between">
         <div class="font-semibold">Create Invention Log</div>
-        <button id="closeInvModal" class="text-muted">Close</button>
+        <button id="closeInvModal" class="text-muted hover:text-gray-900">✕</button>
       </div>
       <div class="mt-3">
-        <input id="invTitle" class="w-full px-3 py-2 border rounded-lg" placeholder="Invention title (e.g. Deadlock-free Hospital Scheduler)" />
-        <textarea id="invContent" rows="8" class="w-full mt-3 px-3 py-2 border rounded-lg" placeholder="Describe your invention, diagrams, steps..."></textarea>
+        <input id="invTitle" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-brand-300" placeholder="Invention title (e.g. Deadlock-free Hospital Scheduler)" />
+        <textarea id="invContent" rows="8" class="w-full mt-3 px-3 py-2 border rounded-lg focus:outline-none focus:border-brand-300" placeholder="Describe your invention, diagrams, steps..."></textarea>
         <div class="flex gap-2 mt-3">
-          <button id="saveInv" class="px-4 py-2 bg-brand-500 text-white rounded-lg font-semibold">Save</button>
-          <button id="exportInv" class="px-4 py-2 bg-[#eef0ff] rounded-lg font-semibold">Export (copy)</button>
+          <button id="saveInv" class="px-4 py-2 bg-brand-500 text-white rounded-lg font-semibold hover:bg-brand-600 transition-colors">Save</button>
+          <button id="exportInv" class="px-4 py-2 bg-[#eef0ff] rounded-lg font-semibold hover:bg-brand-100 transition-colors">Export (copy)</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-40 hidden bg-[#111827] text-white text-sm px-4 py-2 rounded-lg shadow-lg">Saved</div>
+  <div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-40 hidden bg-[#111827] text-white text-sm px-4 py-2 rounded-lg shadow-lg transition-all">Saved</div>
 
   <script>
     /* =========================================
@@ -180,46 +211,95 @@
       scrollBottom();
     }
 
-    function renderAI(text) {
+    function renderAI(data) {
       const div = document.createElement('div');
       div.className = 'flex justify-start';
       const bubble = document.createElement('div');
-      bubble.className = 'max-w-[86%] p-3 rounded-2xl bubble-assistant text-sm shadow-sm';
-      bubble.innerHTML = escapeHtml(text);
+      bubble.className = 'max-w-[86%] p-3 rounded-2xl bubble-assistant text-sm shadow-sm prose';
+      
+      // Parse markdown if available
+      let htmlContent = '';
+      if (typeof marked !== 'undefined' && data.text) {
+        htmlContent = marked.parse(data.text);
+      } else {
+        htmlContent = escapeHtml(data.text || data.output || '');
+      }
+      
+      bubble.innerHTML = htmlContent;
       div.appendChild(bubble);
       messagesEl.appendChild(div);
       
-      // Check for mermaid code blocks
-      if (text.includes('```mermaid')) {
-        const mermaidMatch = text.match(/```mermaid\n([\s\S]*?)\n```/);
-        if (mermaidMatch) {
-          showMermaid(mermaidMatch[1]);
-        }
+      // Handle mind map
+      if (data.mindmap) {
+        showMermaid(data.mindmap);
+      }
+      
+      // Handle sources
+      if (data.sources && data.sources.length > 0) {
+        showSources(data.sources);
+      }
+      
+      // Handle micro-questions
+      if (data.microQuestions && data.microQuestions.length > 0) {
+        renderMicroQuestions(data.microQuestions);
       }
       
       scrollBottom();
     }
 
     function scrollBottom() {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }, 100);
     }
 
     /* =========================================
        MERMAID RENDERING
     ========================================= */
     function showMermaid(code) {
-      document.getElementById('mermaidCode').textContent = code;
+      const container = document.getElementById('mermaidCode');
+      container.textContent = code;
+      container.removeAttribute('data-processed');
       document.getElementById('mermaidPanel').classList.remove('hidden');
+      
       try { 
-        mermaid.init(undefined, "#mermaidCode"); 
+        mermaid.init(undefined, container); 
       } catch(e) { 
-        console.warn('Mermaid render error:', e); 
+        console.warn('Mermaid render error:', e);
+        container.innerHTML = '<div class="text-xs text-red-500">Unable to render mind map</div>';
       }
     }
 
     document.getElementById('closeMermaid').addEventListener('click', ()=> {
       document.getElementById('mermaidPanel').classList.add('hidden');
     });
+
+    /* =========================================
+       SOURCES RENDERING
+    ========================================= */
+    function showSources(sources) {
+      const container = document.getElementById('sourcesList');
+      container.innerHTML = '';
+      
+      sources.forEach((source, idx) => {
+        const div = document.createElement('div');
+        div.className = 'p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors';
+        div.innerHTML = `
+          <div class="flex items-start gap-2">
+            <span class="text-brand-500 font-semibold text-xs">${idx + 1}.</span>
+            <div class="flex-1">
+              <a href="${escapeHtml(source.url || '#')}" target="_blank" class="text-brand-600 hover:text-brand-700 font-medium text-xs">
+                ${escapeHtml(source.title || 'Source ' + (idx + 1))}
+              </a>
+              ${source.content ? `<p class="text-xs text-muted mt-1 line-clamp-2">${escapeHtml(source.content.slice(0, 100))}...</p>` : ''}
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+      
+      document.getElementById('sourcesPanel').classList.remove('hidden');
+    }
 
     /* =========================================
        MICRO-QUESTIONS
@@ -275,7 +355,7 @@
       });
       localStorage.setItem('inventionLogs', JSON.stringify(logs));
       closeInventionModal();
-      showToast('Invention saved');
+      showToast('Invention saved ✓');
     }
 
     document.getElementById('startInvention').addEventListener('click', openInventionModal);
@@ -284,7 +364,7 @@
     document.getElementById('saveInv').addEventListener('click', saveInvention);
     document.getElementById('exportInv').addEventListener('click', () => {
       navigator.clipboard.writeText(document.getElementById('invContent').value || '');
-      showToast('Copied');
+      showToast('Copied to clipboard ✓');
     });
 
     /* =========================================
@@ -300,15 +380,12 @@
         const data = await res.json();
         SESSION_ID = data.sessionId;
         
-        renderAI(data.text);
-        
-        // Render micro-questions if provided
-        if (data.microQuestions && data.microQuestions.length) {
-          renderMicroQuestions(data.microQuestions);
-        }
+        renderAI(data);
 
       } catch (err) {
-        renderAI("⚠️ Failed to connect to backend. Please ensure the server is running on http://localhost:3001");
+        renderAI({ 
+          text: "⚠️ Failed to connect to backend. Please ensure the server is running on http://localhost:3001" 
+        });
         console.error(err);
       }
     }
@@ -331,19 +408,22 @@
           document.getElementById('agendaBadge').textContent = data.agendaStep;
         }
 
-        // Render AI response
-        renderAI(data.output);
+        // Render AI response with all structured data
+        renderAI(data);
 
-        // Check if response contains invention prompt keywords
-        if (data.output.toLowerCase().includes('invent') || 
-            data.output.toLowerCase().includes('design') ||
-            data.output.toLowerCase().includes('create')) {
-          document.getElementById('inventionPromptText').textContent = data.output;
+        // Check if response contains invention prompt
+        const outputText = data.text || data.output || '';
+        if (outputText.toLowerCase().includes('invent') || 
+            outputText.toLowerCase().includes('design') ||
+            outputText.toLowerCase().includes('create your')) {
+          document.getElementById('inventionPromptText').textContent = outputText.slice(0, 200);
           document.getElementById('inventionPreview').classList.remove('hidden');
         }
 
       } catch (err) {
-        renderAI("⚠️ Error communicating with AI professor. Please try again.");
+        renderAI({ 
+          text: "⚠️ Error communicating with AI professor. Please try again." 
+        });
         console.error(err);
       }
     }
