@@ -1,174 +1,375 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>InventaLab — AI Research Session</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>InventaLab — AI Research Session</title>
 
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <style>
-        body {
-            -webkit-font-smoothing: antialiased;
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f4ff',
+              100: '#eeeaff',
+              300: '#bfb3ff',
+              500: '#6b58ff',
+              600: '#5a49f0'
+            },
+            muted: '#6b7280'
+          },
+          borderRadius: {
+            'lg-2': '18px'
+          },
+          boxShadow: {
+            'soft-lg': '0 10px 30px rgba(13, 18, 35, 0.06)'
+          }
         }
+      }
+    }
+  </script>
 
-        .bubble-user {
-            background: #eef0ff;
-        }
+  <!-- Mermaid for mind-map rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: false })</script>
 
-        .bubble-ai {
-            background: #ffffff;
-        }
-    </style>
+  <style>
+    body { -webkit-font-smoothing:antialiased; }
+    .typing-cursor { display:inline-block; width:4px; height:18px; background:#111827; margin-left:3px; animation: blink 1s step-start 0s infinite; vertical-align:middle; }
+    @keyframes blink { 50% { opacity: 0 } }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    .bubble-user { background: linear-gradient(180deg,#eef0ff,#f6f5ff); }
+    .bubble-assistant { background: #fff; }
+  </style>
 </head>
+<body class="bg-gradient-to-b from-white to-[#fbfbff] text-[#0b1220] antialiased">
 
-<body class="bg-gradient-to-b from-white to-[#fbfbff] text-[#0b1220]">
+  <main class="max-w-xl mx-auto px-4 safe-bottom pb-36">
 
-    <main class="max-w-xl mx-auto px-4 pb-32">
-
-        <!-- Header -->
-        <header class="py-4 flex items-center justify-between">
-            <h1 class="text-lg font-bold">InventaLab</h1>
-            <div id="agendaBadge" class="text-xs px-3 py-1 rounded-full bg-[#eef0ff]">
-                Research Session
-            </div>
-        </header>
-
-        <!-- Messages -->
-        <div id="messages" class="space-y-3"></div>
-
-    </main>
-
-    <!-- Input -->
-    <form id="chatForm" class="fixed bottom-0 left-0 right-0 bg-white border-t p-4">
-        <div class="max-w-xl mx-auto flex gap-2">
-            <input id="userInput" class="flex-1 border rounded-full px-4 py-3" placeholder="Type your thought..." />
-            <button class="px-5 py-3 rounded-full bg-indigo-600 text-white font-semibold">
-                Send
-            </button>
+    <!-- Header -->
+    <header class="flex items-center justify-between py-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center bg-gradient-to-br from-brand-100 to-brand-300 shadow-soft-lg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="opacity-95">
+            <path d="M12 2l1.7 3.6L17.6 7 14 9.2 14.9 13 12 11.2 9.1 13 10 9.2 6.4 7 10.3 5.6 12 2z" fill="#4f46e5"/>
+          </svg>
         </div>
-    </form>
+        <div class="font-semibold text-lg">InventaLab</div>
+      </div>
 
-    <script>
-        /* =========================================
-           CONFIG
-        ========================================= */
-        const API_BASE = "http://localhost:3001";
-        let SESSION_ID = null;
+      <div class="text-sm text-muted flex items-center gap-3">
+        <div id="agendaBadge" class="px-3 py-1 rounded-full bg-[#f4f3ff]">Research Session</div>
+      </div>
+    </header>
 
-        /* =========================================
-           DOM
-        ========================================= */
-        const messagesEl = document.getElementById("messages");
-        const form = document.getElementById("chatForm");
-        const input = document.getElementById("userInput");
-        const agendaBadge = document.getElementById("agendaBadge");
+    <!-- Session header -->
+    <section class="bg-white rounded-lg-2 p-4 shadow-soft-lg">
+      <div class="flex items-start gap-3">
+        <div class="flex-1">
+          <h1 class="text-xl font-extrabold">AI Thinking Engine — Research Session</h1>
+          <p class="mt-2 text-sm text-muted">You will be guided through micro-questions, mind-maps, and invention prompts. Create your Invention Log to complete the research.</p>
+        </div>
+        <div class="w-20 hidden md:block">
+          <svg viewBox="0 0 520 520" class="w-20 h-20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs><radialGradient id="g" cx="40%" cy="35%"><stop offset="0" stop-color="#fff"/><stop offset="0.6" stop-color="#e9e7ff"/><stop offset="1" stop-color="#d3cfff"/></radialGradient></defs>
+            <g transform="translate(20,40) scale(0.9)"><ellipse cx="360" cy="180" rx="140" ry="40" fill="none" stroke="#dcd6ff" stroke-width="16" transform="rotate(-18 360 180)"/><path d="M140 20c-40-10-110 12-118 78-8 66 30 120 84 124 54 4 86-44 114-76 28-32 24-92-36-120-20-9-42-14-44-6z" fill="url(#g)"/></g>
+          </svg>
+        </div>
+      </div>
+    </section>
 
-        /* =========================================
-           AUTO START SESSION
-        ========================================= */
-        document.addEventListener("DOMContentLoaded", startSession);
+    <!-- Chat and controls -->
+    <section id="chatArea" class="mt-4 space-y-4">
 
-        async function startSession() {
-            try {
-                const res = await fetch(`${API_BASE}/session/start`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" }
-                });
+      <!-- Chat history -->
+      <div id="messages" class="space-y-3"></div>
 
-                const data = await res.json();
+      <!-- Micro-questions / quick prompts -->
+      <div id="microQ" class="flex gap-2 flex-wrap"></div>
 
-                SESSION_ID = data.sessionId;
-                agendaBadge.innerText = data.agendaTitle;
+      <!-- Mermaid mindmap panel -->
+      <div id="mermaidPanel" class="bg-white rounded-lg-2 p-3 shadow-soft-lg hidden">
+        <div class="flex items-center justify-between">
+          <div class="text-sm font-semibold">Mind-Map</div>
+          <button id="closeMermaid" class="text-xs text-muted">Close</button>
+        </div>
+        <div id="mermaidContainer" class="mt-3">
+          <div class="mermaid" id="mermaidCode">graph TD; A-->B;</div>
+        </div>
+      </div>
 
-                renderAI(data.text);
+      <!-- Invention preview -->
+      <div id="inventionPreview" class="bg-white rounded-lg-2 p-4 shadow-soft-lg hidden">
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 class="font-semibold">Invention Prompt</h3>
+            <p class="text-sm text-muted mt-1" id="inventionPromptText"></p>
+          </div>
+          <button id="startInvention" class="px-3 py-2 bg-[#eef0ff] rounded-lg text-sm font-semibold">Start</button>
+        </div>
+      </div>
 
-            } catch (err) {
-                renderAI("⚠️ Failed to connect to backend.");
-                console.error(err);
-            }
+    </section>
+
+  </main>
+
+  <!-- Sticky input area -->
+  <form id="chatForm" class="fixed left-0 right-0 bottom-0 p-4 bg-white/90 backdrop-blur-md border-t border-t-[#f1eefb]">
+    <div class="max-w-xl mx-auto flex gap-2 items-center">
+      <input id="userInput" class="flex-1 px-4 py-3 rounded-full border border-[#f1eefb]" placeholder="Type your thought or answer a micro-question..." />
+      <button id="sendBtn" type="submit" class="px-4 py-3 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white font-semibold">Send</button>
+    </div>
+  </form>
+
+  <!-- Invention modal -->
+  <div id="inventionModal" class="fixed inset-0 flex items-end md:items-center justify-center z-50 hidden">
+    <div class="absolute inset-0 bg-black/40" id="inventionBackdrop"></div>
+    <div class="relative w-full md:w-3/4 bg-white rounded-t-2xl md:rounded-2xl p-4 max-h-[80vh] overflow-auto">
+      <div class="flex items-center justify-between">
+        <div class="font-semibold">Create Invention Log</div>
+        <button id="closeInvModal" class="text-muted">Close</button>
+      </div>
+      <div class="mt-3">
+        <input id="invTitle" class="w-full px-3 py-2 border rounded-lg" placeholder="Invention title (e.g. Deadlock-free Hospital Scheduler)" />
+        <textarea id="invContent" rows="8" class="w-full mt-3 px-3 py-2 border rounded-lg" placeholder="Describe your invention, diagrams, steps..."></textarea>
+        <div class="flex gap-2 mt-3">
+          <button id="saveInv" class="px-4 py-2 bg-brand-500 text-white rounded-lg font-semibold">Save</button>
+          <button id="exportInv" class="px-4 py-2 bg-[#eef0ff] rounded-lg font-semibold">Export (copy)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-40 hidden bg-[#111827] text-white text-sm px-4 py-2 rounded-lg shadow-lg">Saved</div>
+
+  <script>
+    /* =========================================
+       CONFIG - BACKEND INTEGRATION
+    ========================================= */
+    const API_BASE = "http://localhost:3001";
+    let SESSION_ID = null;
+
+    /* =========================================
+       UTILITY FUNCTIONS
+    ========================================= */
+    function showToast(msg='Saved') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; 
+      t.classList.remove('hidden');
+      setTimeout(()=> t.classList.add('hidden'), 1600);
+    }
+
+    function escapeHtml(unsafe) {
+      return (unsafe || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+    }
+
+    /* =========================================
+       MESSAGE RENDERING
+    ========================================= */
+    const messagesEl = document.getElementById('messages');
+    
+    function renderUser(text) {
+      const div = document.createElement('div');
+      div.className = 'flex justify-end';
+      div.innerHTML = `<div class="max-w-[82%] p-3 rounded-2xl bubble-user text-sm">${escapeHtml(text)}</div>`;
+      messagesEl.appendChild(div);
+      scrollBottom();
+    }
+
+    function renderAI(text) {
+      const div = document.createElement('div');
+      div.className = 'flex justify-start';
+      const bubble = document.createElement('div');
+      bubble.className = 'max-w-[86%] p-3 rounded-2xl bubble-assistant text-sm shadow-sm';
+      bubble.innerHTML = escapeHtml(text);
+      div.appendChild(bubble);
+      messagesEl.appendChild(div);
+      
+      // Check for mermaid code blocks
+      if (text.includes('```mermaid')) {
+        const mermaidMatch = text.match(/```mermaid\n([\s\S]*?)\n```/);
+        if (mermaidMatch) {
+          showMermaid(mermaidMatch[1]);
         }
+      }
+      
+      scrollBottom();
+    }
 
-        /* =========================================
-           FORM SUBMIT
-        ========================================= */
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const text = input.value.trim();
-            if (!text || !SESSION_ID) return;
+    function scrollBottom() {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
 
-            renderUser(text);
-            input.value = "";
+    /* =========================================
+       MERMAID RENDERING
+    ========================================= */
+    function showMermaid(code) {
+      document.getElementById('mermaidCode').textContent = code;
+      document.getElementById('mermaidPanel').classList.remove('hidden');
+      try { 
+        mermaid.init(undefined, "#mermaidCode"); 
+      } catch(e) { 
+        console.warn('Mermaid render error:', e); 
+      }
+    }
 
-            await sendToAI(text);
+    document.getElementById('closeMermaid').addEventListener('click', ()=> {
+      document.getElementById('mermaidPanel').classList.add('hidden');
+    });
+
+    /* =========================================
+       MICRO-QUESTIONS
+    ========================================= */
+    function renderMicroQuestions(questions=[]) {
+      const container = document.getElementById('microQ');
+      container.innerHTML = '';
+      questions.forEach(q => {
+        const btn = document.createElement('button');
+        btn.className = 'px-3 py-2 bg-[#eef0ff] text-sm rounded-full hover:bg-brand-100 transition-colors';
+        btn.textContent = q;
+        btn.setAttribute('data-q', q);
+        container.appendChild(btn);
+      });
+    }
+
+    document.getElementById('microQ').addEventListener('click', (ev) => {
+      const btn = ev.target.closest('button[data-q]');
+      if (!btn) return;
+      const q = btn.getAttribute('data-q');
+      document.getElementById('userInput').value = q;
+      document.getElementById('userInput').focus();
+    });
+
+    /* =========================================
+       INVENTION MODAL
+    ========================================= */
+    function openInventionModal() {
+      document.getElementById('inventionModal').classList.remove('hidden');
+      const p = document.getElementById('inventionPromptText').textContent || '';
+      document.getElementById('invTitle').value = p.slice(0,60) || 'My invention';
+      document.getElementById('invContent').value = (p ? 'Idea: ' + p + '\n\nNotes:\n' : '');
+    }
+
+    function closeInventionModal() { 
+      document.getElementById('inventionModal').classList.add('hidden'); 
+    }
+
+    function saveInvention() {
+      const title = document.getElementById('invTitle').value.trim();
+      const content = document.getElementById('invContent').value.trim();
+      if (!title || !content) { 
+        alert('Please add title & content'); 
+        return; 
+      }
+      const logs = JSON.parse(localStorage.getItem('inventionLogs') || '[]');
+      logs.unshift({ 
+        id: Date.now(), 
+        sessionId: SESSION_ID, 
+        title, 
+        content, 
+        created: new Date().toISOString() 
+      });
+      localStorage.setItem('inventionLogs', JSON.stringify(logs));
+      closeInventionModal();
+      showToast('Invention saved');
+    }
+
+    document.getElementById('startInvention').addEventListener('click', openInventionModal);
+    document.getElementById('closeInvModal').addEventListener('click', closeInventionModal);
+    document.getElementById('inventionBackdrop').addEventListener('click', closeInventionModal);
+    document.getElementById('saveInv').addEventListener('click', saveInvention);
+    document.getElementById('exportInv').addEventListener('click', () => {
+      navigator.clipboard.writeText(document.getElementById('invContent').value || '');
+      showToast('Copied');
+    });
+
+    /* =========================================
+       BACKEND INTEGRATION
+    ========================================= */
+    async function startSession() {
+      try {
+        const res = await fetch(`${API_BASE}/session/start`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
         });
 
-        /* =========================================
-           SEND MESSAGE
-        ========================================= */
-        async function sendToAI(message) {
-            try {
-                const res = await fetch(`${API_BASE}/rag/teach`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        sessionId: SESSION_ID,
-                        message
-                    })
-                });
-
-                const data = await res.json();
-
-                agendaBadge.innerText = data.agendaTitle;
-                renderAI(data.output);
-
-            } catch (err) {
-                renderAI("⚠️ Error talking to AI professor.");
-                console.error(err);
-            }
+        const data = await res.json();
+        SESSION_ID = data.sessionId;
+        
+        renderAI(data.text);
+        
+        // Render micro-questions if provided
+        if (data.microQuestions && data.microQuestions.length) {
+          renderMicroQuestions(data.microQuestions);
         }
 
-        /* =========================================
-           RENDER HELPERS
-        ========================================= */
-        function renderUser(text) {
-            const div = document.createElement("div");
-            div.className = "flex justify-end";
-            div.innerHTML = `
-    <div class="bubble-user px-4 py-3 rounded-2xl text-sm max-w-[80%]">
-      ${escapeHtml(text)}
-    </div>
-  `;
-            messagesEl.appendChild(div);
-            scrollBottom();
+      } catch (err) {
+        renderAI("⚠️ Failed to connect to backend. Please ensure the server is running on http://localhost:3001");
+        console.error(err);
+      }
+    }
+
+    async function sendToAI(message) {
+      try {
+        const res = await fetch(`${API_BASE}/rag/teach`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: SESSION_ID,
+            message
+          })
+        });
+
+        const data = await res.json();
+
+        // Update agenda badge if provided
+        if (data.agendaStep) {
+          document.getElementById('agendaBadge').textContent = data.agendaStep;
         }
 
-        function renderAI(text) {
-            const div = document.createElement("div");
-            div.className = "flex justify-start";
-            div.innerHTML = `
-    <div class="bubble-ai px-4 py-3 rounded-2xl shadow-sm text-sm max-w-[85%]">
-      ${escapeHtml(text)}
-    </div>
-  `;
-            messagesEl.appendChild(div);
-            scrollBottom();
+        // Render AI response
+        renderAI(data.output);
+
+        // Check if response contains invention prompt keywords
+        if (data.output.toLowerCase().includes('invent') || 
+            data.output.toLowerCase().includes('design') ||
+            data.output.toLowerCase().includes('create')) {
+          document.getElementById('inventionPromptText').textContent = data.output;
+          document.getElementById('inventionPreview').classList.remove('hidden');
         }
 
-        function scrollBottom() {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-        }
+      } catch (err) {
+        renderAI("⚠️ Error communicating with AI professor. Please try again.");
+        console.error(err);
+      }
+    }
 
-        function escapeHtml(str) {
-            return str
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;");
-        }
-    </script>
+    /* =========================================
+       FORM HANDLING
+    ========================================= */
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('userInput');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text || !SESSION_ID) return;
+
+      renderUser(text);
+      input.value = '';
+
+      await sendToAI(text);
+    });
+
+    /* =========================================
+       INITIALIZATION
+    ========================================= */
+    document.addEventListener("DOMContentLoaded", startSession);
+  </script>
 
 </body>
-
 </html>
