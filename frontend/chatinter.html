@@ -116,9 +116,7 @@
           </div>
           <button id="closeMermaid" class="text-xs text-muted hover:text-gray-900">✕ Close</button>
         </div>
-        <div id="mermaidContainer" class="overflow-x-auto">
-          <div class="mermaid" id="mermaidCode"></div>
-        </div>
+        <div id="mermaidContainer" class="overflow-x-auto"></div>
       </div>
 
       <!-- Sources panel -->
@@ -217,12 +215,20 @@
       const bubble = document.createElement('div');
       bubble.className = 'max-w-[86%] p-3 rounded-2xl bubble-assistant text-sm shadow-sm prose';
       
-      // Parse markdown if available
+      // Get text content
+      const textContent = data.text || data.output || '';
+      
+      // Parse markdown - handle both cases
       let htmlContent = '';
-      if (typeof marked !== 'undefined' && data.text) {
-        htmlContent = marked.parse(data.text);
+      if (typeof marked !== 'undefined') {
+        try {
+          htmlContent = marked.parse(textContent);
+        } catch(e) {
+          console.warn('Markdown parse error:', e);
+          htmlContent = textContent.replace(/\n/g, '<br>');
+        }
       } else {
-        htmlContent = escapeHtml(data.text || data.output || '');
+        htmlContent = textContent.replace(/\n/g, '<br>');
       }
       
       bubble.innerHTML = htmlContent;
@@ -256,17 +262,28 @@
     /* =========================================
        MERMAID RENDERING
     ========================================= */
+    let mermaidCounter = 0;
     function showMermaid(code) {
-      const container = document.getElementById('mermaidCode');
-      container.textContent = code;
-      container.removeAttribute('data-processed');
+      const container = document.getElementById('mermaidContainer');
+      mermaidCounter++;
+      
+      // Create fresh div for each mermaid render
+      const mermaidDiv = document.createElement('div');
+      mermaidDiv.className = 'mermaid';
+      mermaidDiv.id = `mermaid-${mermaidCounter}`;
+      mermaidDiv.textContent = code;
+      
+      // Clear old content and add new
+      container.innerHTML = '';
+      container.appendChild(mermaidDiv);
+      
       document.getElementById('mermaidPanel').classList.remove('hidden');
       
       try { 
-        mermaid.init(undefined, container); 
+        mermaid.init(undefined, `#mermaid-${mermaidCounter}`); 
       } catch(e) { 
         console.warn('Mermaid render error:', e);
-        container.innerHTML = '<div class="text-xs text-red-500">Unable to render mind map</div>';
+        container.innerHTML = '<div class="text-xs text-red-500">Unable to render mind map. Try refreshing the page.</div>';
       }
     }
 

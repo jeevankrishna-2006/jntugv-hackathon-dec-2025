@@ -22,16 +22,23 @@ You are InventaLab's AI Research Professor.
 You do NOT behave like a normal chatbot.
 
 Your mission:
-- Transform the learner's thinking
+- Transform the learner's thinking through Socratic questioning
 - Create productive doubt
-- Ask micro-questions
+- Ask micro-questions that reveal assumptions
 - Guide invention-driven exploration
 
 Rules:
-- NEVER give direct answers
-- ALWAYS ask a micro-question first
+- NEVER give direct answers unless it's an introduction
+- ALWAYS ask a micro-question that challenges their thinking
+- Respond with 2-4 sentences plus a question
 - Think in systems, not tutorials
 - Be precise, calm, and probing
+- Reference their previous statements when asking questions
+
+Example responses (NOT for introductions):
+- "You're assuming X works linearly. What happens when Y introduces delays?"
+- "That's a common starting point. But where would this model break in a hospital scenario?"
+- "Interesting. Which part of your explanation relies on perfect timing?"
 `.trim();
 
 /* ----------------------------------------
@@ -40,27 +47,34 @@ Rules:
 const INTRO_PROMPT = `
 When providing an INTRODUCTION to a topic:
 
-1. Write a comprehensive 150+ word explanation covering:
-   - What the concept is
-   - Why it matters
-   - Key components/layers
-   - Real-world applications
+1. Write a comprehensive 150-200 word explanation with clear paragraphs covering:
+   - Opening paragraph: What the concept is and why it matters
+   - Second paragraph: Key components/layers with examples
+   - Third paragraph: Real-world applications and significance
 
 2. Use the RAG context provided to cite specific sources
-   - Reference sources naturally in your explanation
-   - Be factually accurate
+   - Reference sources naturally: "According to [source]..."
+   - Be factually accurate and incorporate multiple sources
 
 3. Generate a Mermaid mind map showing the topic structure
    - Use "graph TD" format
-   - Show main concept and 3-5 key sub-concepts
-   - Keep it clear and hierarchical
+   - Show main concept connecting to 4-6 key sub-concepts
+   - Make it hierarchical and easy to understand
+   - Example:
+     graph TD
+     A[Web Development] --> B[Frontend]
+     A --> C[Backend]
+     A --> D[Database]
+     B --> E[HTML/CSS]
+     B --> F[JavaScript]
 
-4. End with 2-3 micro-questions to guide further exploration
+4. End with 2-3 focused micro-questions
 
-Format your response as:
-- Introduction paragraph(s)
-- Mermaid code block with \`\`\`mermaid
-- Micro-questions at the end
+IMPORTANT: 
+- Write in clear paragraphs, not bullet points
+- Make it engaging and educational
+- Use line breaks between paragraphs
+- Keep micro-questions specific and thought-provoking
 `.trim();
 
 /* --------------------------------------------------
@@ -214,8 +228,8 @@ app.post("/rag/teach", async (req, res) => {
             : SYSTEM_PROMPT;
 
         const userPrompt = isIntroduction
-            ? `User is requesting an introduction to: "${currentTopic}"\n\nUser message: "${message}"\n\nProvide a comprehensive 150+ word introduction with a Mermaid mind map and micro-questions.`
-            : `User message: "${message}"\n\nRespond with a micro-question that creates productive doubt. Guide them toward deeper thinking.`;
+            ? `User is requesting an introduction to: "${currentTopic}"\n\nUser message: "${message}"\n\nProvide a comprehensive 150+ word introduction with a Mermaid mind map and micro-questions. Format the response with clear paragraphs.`
+            : `Context: We're discussing "${currentTopic}"\n\nUser said: "${message}"\n\nYour task: Ask a micro-question that reveals their assumptions or creates productive doubt. Respond in 2-4 sentences plus ONE focused question. Reference what they said. Do NOT list multiple questions.`;
 
         const messages = [
             { role: "system", content: systemPrompt },
@@ -248,10 +262,12 @@ app.post("/rag/teach", async (req, res) => {
                     Authorization: `Bearer ${process.env.GROQ_API_KEY}`
                 },
                 body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile", // Updated model
+                    model: "llama-3.3-70b-versatile",
                     messages,
-                    temperature: 0.7,
-                    max_tokens: isIntroduction ? 1200 : 600
+                    temperature: isIntroduction ? 0.5 : 0.7,
+                    max_tokens: isIntroduction ? 1200 : 400,
+                    top_p: 0.9,
+                    frequency_penalty: 0.3 // Reduce repetition
                 })
             }
         );
@@ -282,7 +298,14 @@ app.post("/rag/teach", async (req, res) => {
         const microQuestions = extractMicroQuestions(output);
         
         // Remove mermaid code from text for cleaner display
-        const cleanText = output.replace(/```mermaid[\s\S]*?```/g, '').trim();
+        let cleanText = output.replace(/```mermaid[\s\S]*?```/g, '').trim();
+        
+        // Format paragraphs with proper spacing
+        cleanText = cleanText
+            .split('\n\n')
+            .map(p => p.trim())
+            .filter(p => p.length > 0)
+            .join('\n\n');
 
         /* -------------------------
            SEND STRUCTURED RESPONSE
